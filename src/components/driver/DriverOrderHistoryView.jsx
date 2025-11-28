@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Sparkles, MapPin, Calendar, Filter } from 'lucide-react';
+import { Sparkles, MapPin, Calendar, Filter, Star } from 'lucide-react';
+import OrderDetailsModal from './OrderDetailsModal';
 
 const DriverOrderHistoryView = ({ handleMotivateDriver, isAILoading, driverMotivation, setDriverTab }) => {
   const [timeRange, setTimeRange] = useState('all'); // 'today', 'week', 'all'
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   // Real History Data from LocalStorage
   const allHistory = JSON.parse(localStorage.getItem('driverOrderHistory') || '[]');
@@ -29,7 +31,7 @@ const DriverOrderHistoryView = ({ handleMotivateDriver, isAILoading, driverMotiv
   const driverName = currentUser.name || 'Conductor';
 
   return (
-    <div className="bg-[#4c8479] min-h-full flex flex-col font-sans">
+    <div className="bg-[#4c8479] min-h-full flex flex-col font-sans relative">
         <div className="pt-12 pb-6 px-6 text-white text-center relative">
             <div className="absolute top-12 left-6 text-[#e8b931] font-medium text-lg leading-tight text-left">
                 {driverName} <br/> <span className="text-[#e8b931] text-sm font-normal">Chasky Black</span>
@@ -80,7 +82,12 @@ const DriverOrderHistoryView = ({ handleMotivateDriver, isAILoading, driverMotiv
             
             <div className="space-y-4">
                 {filteredHistory.map((order, idx) => (
-                    <div key={idx} className="bg-[#98dad0] rounded-xl p-4 relative shadow-sm animate-in slide-in-from-bottom-4 duration-500" style={{animationDelay: `${idx * 50}ms`}}>
+                    <div 
+                        key={idx} 
+                        onClick={() => setSelectedOrder(order)}
+                        className="bg-[#98dad0] rounded-xl p-4 relative shadow-sm animate-in slide-in-from-bottom-4 duration-500 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]" 
+                        style={{animationDelay: `${idx * 50}ms`}}
+                    >
                         <div className="flex justify-between items-start mb-3">
                             <div>
                                 <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block mb-1">Orden #{order.id.toString().slice(-6)}</span>
@@ -105,7 +112,16 @@ const DriverOrderHistoryView = ({ handleMotivateDriver, isAILoading, driverMotiv
                         </div>
 
                         <div className="mt-3 pt-2 border-t border-slate-700/10 flex justify-between items-center">
-                             <span className="text-xs font-medium text-slate-800 bg-white/30 px-2 py-1 rounded-md">Completado</span>
+                             <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-slate-800 bg-white/30 px-2 py-1 rounded-md">
+                                    {order.paymentMethod || 'Efectivo'}
+                                </span>
+                                <div className="flex">
+                                    {[...Array(order.rating || 5)].map((_, i) => (
+                                        <Star key={i} size={12} className="text-yellow-500 fill-yellow-500" />
+                                    ))}
+                                </div>
+                             </div>
                              <span className="text-xs text-slate-700">{new Date(order.completedAt).toLocaleDateString()}</span>
                         </div>
                     </div>
@@ -117,6 +133,14 @@ const DriverOrderHistoryView = ({ handleMotivateDriver, isAILoading, driverMotiv
                 )}
             </div>
         </div>
+
+        {/* Order Details Modal */}
+        {selectedOrder && (
+            <OrderDetailsModal 
+                order={selectedOrder} 
+                onClose={() => setSelectedOrder(null)} 
+            />
+        )}
     </div>
   );
 };

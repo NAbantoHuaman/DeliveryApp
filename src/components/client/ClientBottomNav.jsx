@@ -22,7 +22,7 @@ const ClientBottomNav = ({ activeTab, view, setActiveTab, setView, cartItemsCoun
         }`}
       >
         <item.icon size={24} strokeWidth={2.5} />
-        <span className="text-[10px]">{item.label}</span>
+        <span className="text-xs font-medium">{item.label}</span>
       </button>
     ))}
   </div>

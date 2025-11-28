@@ -48,8 +48,8 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
               return (
                   <div className="space-y-6 animate-in slide-in-from-right duration-300">
                       <div className="flex justify-between items-center mb-6">
-                          <h2 className="text-xl  text-slate-900">Información Personal</h2>
-                          <button onClick={() => setIsEditing(!isEditing)} className="text-[#4c8479]  text-sm">
+                          <h2 className="text-2xl  text-slate-900">Información Personal</h2>
+                          <button onClick={() => setIsEditing(!isEditing)} className="text-[#4c8479]  text-base">
                               {isEditing ? 'Cancelar' : 'Editar'}
                           </button>
                       </div>
@@ -61,19 +61,19 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
                               { label: 'Contraseña', key: 'password', type: 'password' }
                           ].map((field) => (
                               <div key={field.key} className="space-y-1">
-                                  <label className="text-xs  text-slate-500 uppercase">{field.label}</label>
+                                  <label className="text-sm  text-slate-500 uppercase">{field.label}</label>
                                   <input 
                                       type={field.type}
                                       value={formData[field.key]}
                                       onChange={(e) => setFormData({...formData, [field.key]: e.target.value})}
                                       disabled={!isEditing}
-                                      className={`w-full bg-slate-50 rounded-xl px-4 py-3 text-slate-900 outline-none focus:ring-2 focus:ring-[#4c8479]/20 transition-all ${!isEditing && 'opacity-60'}`}
+                                      className={`w-full bg-slate-50 rounded-xl px-4 py-3 text-base text-slate-900 outline-none focus:ring-2 focus:ring-[#4c8479]/20 transition-all ${!isEditing && 'opacity-60'}`}
                                   />
                               </div>
                           ))}
                       </div>
                       {isEditing && (
-                          <button onClick={handleSaveProfile} className="w-full bg-[#4c8479] text-white  py-4 rounded-xl shadow-lg shadow-[#4c8479]/30 active:scale-[0.98] transition-transform">
+                          <button onClick={handleSaveProfile} className="w-full bg-[#4c8479] text-white text-lg py-4 rounded-xl shadow-lg shadow-[#4c8479]/30 active:scale-[0.98] transition-transform">
                               Guardar Cambios
                           </button>
                       )}
@@ -82,21 +82,21 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
           case 'coupons':
               return (
                   <div className="space-y-4 animate-in slide-in-from-right duration-300">
-                      <h2 className="text-xl  text-slate-900 mb-4">Mis Cupones</h2>
+                      <h2 className="text-2xl  text-slate-900 mb-4">Mis Cupones</h2>
                       {coupons.map(coupon => (
                           <div key={coupon.id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex justify-between items-center relative overflow-hidden">
                               <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#4c8479]"></div>
                               <div>
-                                  <h3 className=" text-lg text-slate-900">{coupon.code}</h3>
-                                  <p className="text-[#4c8479] ">{coupon.discount}</p>
-                                  <p className="text-xs text-slate-500">{coupon.desc}</p>
+                                  <h3 className=" text-xl text-slate-900">{coupon.code}</h3>
+                                  <p className="text-[#4c8479] text-lg">{coupon.discount}</p>
+                                  <p className="text-sm text-slate-500">{coupon.desc}</p>
                               </div>
                               <div className="text-right">
-                                  <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded-full">{coupon.valid}</span>
+                                  <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">{coupon.valid}</span>
                               </div>
                           </div>
                       ))}
-                      <button className="w-full border-2 border-dashed border-slate-300 text-slate-400  py-3 rounded-xl hover:border-[#4c8479] hover:text-[#4c8479] transition-colors">
+                      <button className="w-full border-2 border-dashed border-slate-300 text-slate-400 text-base py-3 rounded-xl hover:border-[#4c8479] hover:text-[#4c8479] transition-colors">
                           Agregar Cupón
                       </button>
                   </div>
@@ -104,23 +104,23 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
           case 'help':
               return (
                   <div className="space-y-4 animate-in slide-in-from-right duration-300">
-                      <h2 className="text-xl  text-slate-900 mb-4">Centro de Ayuda</h2>
+                      <h2 className="text-2xl  text-slate-900 mb-4">Centro de Ayuda</h2>
                       {['¿Dónde está mi pedido?', 'Problemas con el pago', 'Quiero cancelar mi orden', 'Reportar un problema'].map((faq, i) => (
-                          <button key={i} className="w-full bg-slate-50 rounded-xl p-4 text-left font-medium text-slate-700 flex justify-between items-center">
+                          <button key={i} className="w-full bg-slate-50 rounded-xl p-4 text-left font-medium text-base text-slate-700 flex justify-between items-center">
                               {faq}
                               <ChevronRight size={16} className="text-slate-400" />
                           </button>
                       ))}
                       <div className="bg-[#4c8479]/5 p-4 rounded-xl mt-4">
-                          <h3 className=" text-[#4c8479] mb-2">¿Necesitas más ayuda?</h3>
-                          <button className="bg-[#4c8479] text-white text-sm  px-4 py-2 rounded-lg">Chat con Soporte</button>
+                          <h3 className=" text-[#4c8479] text-lg mb-2">¿Necesitas más ayuda?</h3>
+                          <button className="bg-[#4c8479] text-white text-base  px-4 py-2 rounded-lg">Chat con Soporte</button>
                       </div>
                   </div>
               );
           case 'preferences':
               return (
                   <div className="space-y-4 animate-in slide-in-from-right duration-300">
-                      <h2 className="text-xl  text-slate-900 mb-4">Preferencias de Comida</h2>
+                      <h2 className="text-2xl  text-slate-900 mb-4">Preferencias de Comida</h2>
                       <div className="flex flex-wrap gap-2">
                           {allPreferences.map(pref => (
                               <button 
@@ -132,7 +132,7 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
                                           setPreferences([...preferences, pref]);
                                       }
                                   }}
-                                  className={`px-4 py-2 rounded-full text-sm  transition-colors ${preferences.includes(pref) ? 'bg-[#4c8479] text-white' : 'bg-slate-100 text-slate-600'}`}
+                                  className={`px-4 py-2 rounded-full text-base  transition-colors ${preferences.includes(pref) ? 'bg-[#4c8479] text-white' : 'bg-slate-100 text-slate-600'}`}
                               >
                                   {pref}
                               </button>
@@ -144,19 +144,19 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
               return (
                   <div className="space-y-4 animate-in slide-in-from-right duration-300">
                       <div className="flex justify-between items-center mb-4">
-                          <h2 className="text-xl  text-slate-900">Mis Direcciones</h2>
+                          <h2 className="text-2xl  text-slate-900">Mis Direcciones</h2>
                           <button onClick={onAddAddress} className="text-[#4c8479]"><Plus size={24} /></button>
                       </div>
                       {(currentUser?.addresses || []).length === 0 ? (
-                          <p className="text-slate-500 text-sm text-center py-8">No tienes direcciones guardadas.</p>
+                          <p className="text-slate-500 text-base text-center py-8">No tienes direcciones guardadas.</p>
                       ) : (
                           (currentUser?.addresses || []).map((addr, index) => (
                               <div key={index} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex justify-between items-start">
                                   <div className="flex gap-3">
                                       <MapPin className="text-[#4c8479] mt-1" size={20} />
                                       <div>
-                                          <h3 className=" text-slate-900">{addr.label}</h3>
-                                          <p className="text-sm text-slate-600">{addr.address}</p>
+                                          <h3 className=" text-slate-900 text-lg">{addr.label}</h3>
+                                          <p className="text-base text-slate-600">{addr.address}</p>
                                       </div>
                                   </div>
                                   <button onClick={() => {
@@ -173,13 +173,13 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
           case 'favorites':
               return (
                   <div className="space-y-4 animate-in slide-in-from-right duration-300">
-                      <h2 className="text-xl  text-slate-900 mb-4">Mis Favoritos</h2>
+                      <h2 className="text-2xl  text-slate-900 mb-4">Mis Favoritos</h2>
                       {RESTAURANTS.slice(0, 3).map(rest => (
                           <div key={rest.id} className="flex gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
                               <img src={rest.image} className="w-16 h-16 rounded-xl object-cover" alt={rest.name} />
                               <div>
-                                  <h3 className=" text-slate-900">{rest.name}</h3>
-                                  <div className="flex items-center gap-1 text-xs text-slate-500">
+                                  <h3 className=" text-slate-900 text-lg">{rest.name}</h3>
+                                  <div className="flex items-center gap-1 text-sm text-slate-500">
                                       <Heart size={12} className="fill-[#4c8479] text-[#4c8479]" />
                                       <span>Te gusta este lugar</span>
                                   </div>
@@ -191,7 +191,7 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
           case 'notifications':
               return (
                   <div className="space-y-6 animate-in slide-in-from-right duration-300">
-                      <h2 className="text-xl  text-slate-900 mb-4">Notificaciones</h2>
+                      <h2 className="text-2xl  text-slate-900 mb-4">Notificaciones</h2>
                       {[
                           'Estado de mi pedido',
                           'Promociones y descuentos',
@@ -199,7 +199,7 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
                           'Sugerencias de restaurantes'
                       ].map((item, i) => (
                           <div key={i} className="flex justify-between items-center">
-                              <span className="text-slate-700 font-medium">{item}</span>
+                              <span className="text-slate-700 font-medium text-base">{item}</span>
                               <div className="w-11 h-6 bg-[#4c8479] rounded-full relative cursor-pointer">
                                   <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
                               </div>
@@ -241,10 +241,10 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
         {/* Header Section */}
         <div className="pt-12 pb-8 px-6 flex justify-between items-center">
             <div>
-                <h1 className="text-3xl font-medium text-white mb-1">
+                <h1 className="text-4xl font-medium text-white mb-1">
                     ¡Hola, <span className="text-[#e8b931]">{currentUser?.name?.split(' ')[0] || 'Usuario'}!</span>
                 </h1>
-                <p className="text-white/80 text-sm">¿Qué deseas hacer hoy?</p>
+                <p className="text-white/80 text-base">¿Qué deseas hacer hoy?</p>
             </div>
             <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
                 <User size={24} className="text-white" />
@@ -282,7 +282,7 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
                                 <div className={`w-10 h-10 ${item.color} rounded-full flex items-center justify-center`}>
                                     <item.icon size={20} strokeWidth={2} />
                                 </div>
-                                <span className="text-xs font-medium text-slate-700">{item.label}</span>
+                                <span className="text-sm font-medium text-slate-700">{item.label}</span>
                             </button>
                         ))}
                     </div>
@@ -291,7 +291,7 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
                     <div className="space-y-8">
                         {menuItems.map((section, idx) => (
                             <div key={idx}>
-                                <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 ml-1">{section.title}</h2>
+                                <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 ml-1">{section.title}</h2>
                                 <div className="space-y-3">
                                     {section.items.map((item, itemIdx) => (
                                         <button 
@@ -303,7 +303,7 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
                                                 <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm">
                                                     <item.icon size={16} strokeWidth={2} />
                                                 </div>
-                                                <span className="text-sm font-medium text-slate-700">{item.label}</span>
+                                                <span className="text-base font-medium text-slate-700">{item.label}</span>
                                             </div>
                                             <ChevronRight size={18} className="text-slate-300 group-hover:text-[#4c8479] transition-colors" />
                                         </button>
@@ -322,18 +322,18 @@ const ProfileView = ({ isDriverMode, setDriverTab, setActiveTab, userMode, setUs
                                     <div className="w-8 h-8 bg-[#4c8479] rounded-full flex items-center justify-center text-white shadow-sm">
                                         <Bike size={16} strokeWidth={2} />
                                     </div>
-                                    <span className="text-sm font-bold text-[#4c8479]">
+                                    <span className="text-base font-bold text-[#4c8479]">
                                         {userMode === 'client' ? 'Modo Repartidor' : 'Modo Cliente'}
                                     </span>
                                 </div>
-                                <div className="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-[#4c8479] shadow-sm">
+                                <div className="px-3 py-1 bg-white rounded-full text-xs font-bold text-[#4c8479] shadow-sm">
                                     CAMBIAR
                                 </div>
                             </button>
 
                             <button 
                                 onClick={handleLogout} 
-                                className="w-full flex items-center justify-center gap-2 p-4 text-red-500 font-medium text-sm hover:bg-red-50 rounded-2xl transition-colors"
+                                className="w-full flex items-center justify-center gap-2 p-4 text-red-500 font-medium text-base hover:bg-red-50 rounded-2xl transition-colors"
                             >
                                 <LogOut size={18} />
                                 Cerrar Sesión

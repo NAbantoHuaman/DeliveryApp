@@ -13,7 +13,7 @@ const ClientHomeView = ({ user, onRestaurantClick, address, onAddressClick, setA
             className="flex items-center gap-1 cursor-pointer active:opacity-80 transition-opacity"
             onClick={onAddressClick}
         >
-            <span className=" text-base truncate max-w-[200px]">{address || "Seleccionar ubicación"}</span>
+            <span className=" text-lg truncate max-w-[200px]">{address || "Seleccionar ubicación"}</span>
             <ChevronDown size={16} />
         </div>
         <div className="flex items-center gap-3">
@@ -26,7 +26,7 @@ const ClientHomeView = ({ user, onRestaurantClick, address, onAddressClick, setA
             >
                 <ShoppingCart size={24} />
                 {cart.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-white text-[#4c8479] text-[10px]  w-4 h-4 flex items-center justify-center rounded-full">
+                    <span className="absolute -top-1 -right-1 bg-white text-[#4c8479] text-xs  w-4 h-4 flex items-center justify-center rounded-full">
                         {cart.length}
                     </span>
                 )}
@@ -39,7 +39,7 @@ const ClientHomeView = ({ user, onRestaurantClick, address, onAddressClick, setA
         <input 
           type="text" 
           placeholder="Locales, platos y productos" 
-          className="w-full bg-white rounded-full py-3 pl-12 pr-12 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none shadow-sm"
+          className="w-full bg-white rounded-full py-3 pl-12 pr-12 text-base text-slate-800 placeholder:text-slate-400 focus:outline-none shadow-sm"
         />
         <div className="absolute right-2 top-2 bg-[#4c8479] p-1.5 rounded-full">
              <Search size={16} className="text-white" />
@@ -54,11 +54,11 @@ const ClientHomeView = ({ user, onRestaurantClick, address, onAddressClick, setA
         <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-white rounded-3xl p-4 shadow-sm flex flex-col items-center text-center gap-3 cursor-pointer active:scale-[0.98] transition-transform">
                 <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGZvb2R8ZW58MHx8MHx8fDA%3D" className="w-24 h-24 object-cover rounded-full shadow-md" alt="Restaurantes" />
-                <span className=" text-slate-800">Restaurantes</span>
+                <span className=" text-slate-800 text-lg">Restaurantes</span>
             </div>
             <div className="bg-white rounded-3xl p-4 shadow-sm flex flex-col items-center text-center gap-3 cursor-pointer active:scale-[0.98] transition-transform">
                 <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z3JvY2VyeXxlbnwwfHwwfHx8MA%3D%3D" className="w-24 h-24 object-cover rounded-full shadow-md" alt="Market" />
-                <span className=" text-slate-800">PedidosYa Market</span>
+                <span className=" text-slate-800 text-lg">PedidosYa Market</span>
             </div>
         </div>
 
@@ -74,7 +74,7 @@ const ClientHomeView = ({ user, onRestaurantClick, address, onAddressClick, setA
                     <div className="w-full aspect-square rounded-xl overflow-hidden">
                         <img src={cat.img} alt={cat.name} className="w-full h-full object-cover" />
                     </div>
-                    <span className="text-[10px]  text-slate-800">{cat.name}</span>
+                    <span className="text-xs  text-slate-800">{cat.name}</span>
                 </div>
             ))}
         </div>
@@ -82,7 +82,7 @@ const ClientHomeView = ({ user, onRestaurantClick, address, onAddressClick, setA
         {/* Brand Strip */}
         <div className="flex gap-4 overflow-x-auto scrollbar-hide mb-8 pb-2">
             {RESTAURANTS.map((rest) => (
-                <div key={rest.id} className="bg-[#4c8479] min-w-[60px] h-[60px] rounded-2xl flex items-center justify-center text-white  text-[10px] shadow-md shrink-0">
+                <div key={rest.id} className="bg-[#4c8479] min-w-[60px] h-[60px] rounded-2xl flex items-center justify-center text-white  text-xs shadow-md shrink-0">
                     {rest.name.split(' ')[0]}
                 </div>
             ))}
@@ -91,17 +91,17 @@ const ClientHomeView = ({ user, onRestaurantClick, address, onAddressClick, setA
         {/* Promo Footer */}
         <div className="bg-[#fff9c4] rounded-3xl p-6 flex justify-between items-center shadow-sm mb-6">
             <div>
-                <div className="bg-black text-[#fff9c4] text-xs  px-2 py-1 rounded w-fit mb-2">08:44</div>
-                <h3 className="text-xl  text-slate-900 mb-1">Ahorra hasta S/ 14</h3>
-                <p className="text-xs text-slate-700 mb-4">Prueba nuevos sabores y disfruta descuentos fugaces.</p>
-                <button className=" text-sm text-slate-900">Descubrir locales</button>
+                <div className="bg-black text-[#fff9c4] text-sm  px-2 py-1 rounded w-fit mb-2">08:44</div>
+                <h3 className="text-2xl  text-slate-900 mb-1">Ahorra hasta S/ 14</h3>
+                <p className="text-sm text-slate-700 mb-4">Prueba nuevos sabores y disfruta descuentos fugaces.</p>
+                <button className=" text-base text-slate-900">Descubrir locales</button>
             </div>
             <img src="https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8Zm9vZHxlbnwwfHwwfHx8MA%3D%3D" className="w-24 h-24 rounded-full object-cover shadow-md" alt="Promo" />
         </div>
 
         {/* Restaurant List (Hidden or below? Keeping it below for now but simplified) */}
         <div className="mb-8">
-            <h2 className="text-lg  text-slate-800 mb-4">Restaurantes cerca de ti</h2>
+            <h2 className="text-xl  text-slate-800 mb-4">Restaurantes cerca de ti</h2>
             <div className="space-y-4">
                 {RESTAURANTS.map(rest => (
                 <div 
@@ -113,13 +113,13 @@ const ClientHomeView = ({ user, onRestaurantClick, address, onAddressClick, setA
                         <img src={rest.image} alt={rest.name} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1">
-                        <h3 className=" text-slate-800">{rest.name}</h3>
-                        <div className="flex items-center gap-1 text-xs text-slate-500 mt-1">
-                            <Star size={12} className="fill-slate-900 text-slate-900" />
+                        <h3 className=" text-slate-800 text-lg">{rest.name}</h3>
+                        <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
+                            <Star size={14} className="fill-slate-900 text-slate-900" />
                             <span className=" text-slate-900">{rest.rating}</span>
                             <span>• {rest.time}</span>
                         </div>
-                        <span className="text-xs text-slate-500 mt-1 block">Envío S/ {rest.deliveryFee}</span>
+                        <span className="text-sm text-slate-500 mt-1 block">Envío S/ {rest.deliveryFee}</span>
                     </div>
                 </div>
                 ))}

@@ -1,101 +1,97 @@
 import React, { useEffect, useRef } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { MAPBOX_TOKEN, MAPBOX_STYLE } from '../../config/mapbox';
+
+mapboxgl.accessToken = MAPBOX_TOKEN;
 
 const IncomingOrderModal = ({ incomingOrder, setIncomingOrder, acceptOrder }) => {
     const mapContainerRef = useRef(null);
     const mapInstanceRef = useRef(null);
+    const [acceptanceStatus, setAcceptanceStatus] = React.useState('idle'); // idle, processing, confirmed
+    const [countdown, setCountdown] = React.useState(5);
 
     useEffect(() => {
         if (!incomingOrder || !mapContainerRef.current) return;
 
         // Initialize Map if not already initialized
         if (!mapInstanceRef.current) {
-            const map = L.map(mapContainerRef.current, {
-                center: [incomingOrder.storeLocation.lat, incomingOrder.storeLocation.lng],
-                zoom: 14,
-                zoomControl: false,
-                attributionControl: false,
-                dragging: false,
-                touchZoom: false,
-                scrollWheelZoom: false,
-                doubleClickZoom: false,
-                boxZoom: false,
-                keyboard: false
+            const map = new mapboxgl.Map({
+                container: mapContainerRef.current,
+                style: MAPBOX_STYLE,
+                zoom: 13,
+                interactive: false,
+                attributionControl: false
             });
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-
             mapInstanceRef.current = map;
+
+            map.on('load', () => {
+                const fetchRoute = async () => {
+                    try {
+                        const waypoints = `${incomingOrder.storeLocation.lng},${incomingOrder.storeLocation.lat};${incomingOrder.clientLocation.lng},${incomingOrder.clientLocation.lat}`;
+                        const response = await fetch(
+                            `https://api.mapbox.com/directions/v5/mapbox/driving/${waypoints}?steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`
+                        );
+                        const data = await response.json();
+
+                        if (data.routes && data.routes[0]) {
+                            const route = data.routes[0];
+                            const geojson = {
+                                type: 'Feature',
+                                properties: {},
+                                geometry: route.geometry
+                            };
+
+                            if (map.getSource('route')) {
+                                map.getSource('route').setData(geojson);
+                            } else {
+                                map.addLayer({
+                                    id: 'route',
+                                    type: 'line',
+                                    source: {
+                                        type: 'geojson',
+                                        data: geojson
+                                    },
+                                    layout: {
+                                        'line-join': 'round',
+                                        'line-cap': 'round'
+                                    },
+                                    paint: {
+                                        'line-color': '#3b82f6',
+                                        'line-width': 5,
+                                        'line-opacity': 0.8,
+                                        'line-dasharray': [0.2, 2] // Dotted line effect approximation
+                                    }
+                                });
+                            }
+
+                            // Fit bounds to route
+                            const coordinates = route.geometry.coordinates;
+                            const bounds = coordinates.reduce((bounds, coord) => {
+                                return bounds.extend(coord);
+                            }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+                            map.fitBounds(bounds, {
+                                padding: 40
+                            });
+                        }
+                    } catch (error) {
+                        console.error("Error fetching route:", error);
+                    }
+                };
+
+                fetchRoute();
+            });
         }
 
-        const map = mapInstanceRef.current;
-
-        // Clear previous layers
-        map.eachLayer((layer) => {
-            if (layer instanceof L.Marker || layer instanceof L.Polyline) {
-                map.removeLayer(layer);
-            }
-        });
-
-        // Add Markers
-        const storeIcon = L.divIcon({
-            className: 'bg-transparent',
-            html: `<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md"></div>`,
-            iconSize: [16, 16]
-        });
-
-        const clientIcon = L.divIcon({
-            className: 'bg-transparent',
-            html: `<div class="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-md"></div>`,
-            iconSize: [16, 16]
-        });
-
-        const storeMarker = L.marker([incomingOrder.storeLocation.lat, incomingOrder.storeLocation.lng], { icon: storeIcon }).addTo(map);
-        const clientMarker = L.marker([incomingOrder.clientLocation.lat, incomingOrder.clientLocation.lng], { icon: clientIcon }).addTo(map);
-
-        // Fetch and Draw Real Route (OSRM)
-        const fetchRoute = async () => {
-            try {
-                const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${incomingOrder.storeLocation.lng},${incomingOrder.storeLocation.lat};${incomingOrder.clientLocation.lng},${incomingOrder.clientLocation.lat}?overview=full&geometries=geojson`);
-                const data = await response.json();
-
-                if (data.routes && data.routes.length > 0) {
-                    const route = data.routes[0];
-                    const coordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]); // Flip to [lat, lng]
-
-                    // Draw Route Polyline
-                    L.polyline(coordinates, { 
-                        color: '#3b82f6', 
-                        weight: 5, 
-                        opacity: 0.8, 
-                        lineCap: 'round',
-                        lineJoin: 'round',
-                        dashArray: '1, 10' // Dotted line effect
-                    }).addTo(map);
-
-                    // Fit bounds to route
-                    const routeBounds = L.latLngBounds(coordinates);
-                    map.fitBounds(routeBounds, { padding: [40, 40] });
-                }
-            } catch (error) {
-                console.error("Error fetching route:", error);
-                // Fallback to straight line
-                L.polyline([
-                    [incomingOrder.storeLocation.lat, incomingOrder.storeLocation.lng],
-                    [incomingOrder.clientLocation.lat, incomingOrder.clientLocation.lng]
-                ], { color: '#3b82f6', weight: 3, opacity: 0.7, dashArray: '5, 10' }).addTo(map);
+        return () => {
+             if (mapInstanceRef.current) {
+                mapInstanceRef.current.remove();
+                mapInstanceRef.current = null;
             }
         };
 
-        fetchRoute();
-
     }, [incomingOrder]);
-
-    const [acceptanceStatus, setAcceptanceStatus] = React.useState('idle'); // idle, processing, confirmed
-    const [countdown, setCountdown] = React.useState(5);
 
     useEffect(() => {
         let timer;
@@ -219,7 +215,7 @@ const IncomingOrderModal = ({ incomingOrder, setIncomingOrder, acceptOrder }) =>
                             15 min
                         </div>
                     </div>
-                    <div className="text-center text-[10px] text-slate-400 mt-1">OpenStreetMap</div>
+                    <div className="text-center text-[10px] text-slate-400 mt-1">Mapbox GL JS</div>
                 </div>
 
                 {/* Footer Buttons */}

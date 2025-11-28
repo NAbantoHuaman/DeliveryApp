@@ -14,7 +14,7 @@ const DriverBottomNav = ({ driverTab, setDriverTab, activeOrder }) => (
               className={`flex flex-col items-center space-y-1 transition-colors ${driverTab === item.id ? 'text-[#4c8479]' : 'text-slate-400'}`}
           >
               <item.icon size={24} strokeWidth={2.5} />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-xs font-medium">{item.label}</span>
           </button>
       ))}
   </div>

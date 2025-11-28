@@ -5,6 +5,7 @@ import { CartProvider, useCart } from './context/CartContext';
 
 // Component Imports
 import AuthView from './components/auth/AuthView';
+import DriverRegisterView from './components/auth/DriverRegisterView';
 import ProfileView from './components/profile/ProfileView';
 import AddressSelectionView from './components/client/AddressSelectionView';
 import ClientHomeView from './components/client/ClientHomeView';
@@ -24,12 +25,15 @@ import ClientCheckoutView from './components/client/ClientCheckoutView';
 import ClientPromotionsView from './components/client/ClientPromotionsView';
 import EmptyCartModal from './components/client/EmptyCartModal';
 
+import SplashScreen from './components/common/SplashScreen';
+
 const AppContent = () => {
   const { currentUser, isAuthenticated, login, register, logout, updateUserProfile, isLoading } = useAuth();
   const { cart, addToCart, removeFromCart, updateQuantity, clearCart, getCartCount } = useCart();
 
   // --- STATE MANAGEMENT ---
-  const [authView, setAuthView] = useState('login'); // 'login' | 'register'
+  const [showSplash, setShowSplash] = useState(true);
+  const [authView, setAuthView] = useState('login'); // 'login' | 'register' | 'driver-register'
   const [userMode, setUserMode] = useState('driver'); // 'client' | 'driver'
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'search', 'orders', 'profile'
   const [driverTab, setDriverTab] = useState('dashboard');
@@ -81,7 +85,7 @@ const AppContent = () => {
       setIsProcessing(true);
       try {
           await login(loginData.user, loginData.password);
-          setUserMode('driver');
+          setUserMode('client'); // Default to client on login, unless they are a driver (mock logic)
           setView('main');
       } catch (error) {
           setAuthError(error);
@@ -102,7 +106,7 @@ const AppContent = () => {
       setIsProcessing(true);
       try {
           await register(registerData);
-          setUserMode('driver');
+          setUserMode('client'); // New normal users are clients
           setView('main');
       } catch (error) {
           setAuthError(error);
@@ -110,6 +114,29 @@ const AppContent = () => {
           setIsProcessing(false);
       }
   }, [registerData, register]);
+
+  const onDriverRegisterSubmit = useCallback(async (driverData) => {
+      setIsProcessing(true);
+      try {
+          // In a real app, we would send the vehicle and document data to the backend
+          // For now, we just register the user with the basic info and set them as driver
+          const basicData = {
+              name: driverData.name,
+              phone: driverData.phone,
+              email: driverData.email,
+              user: driverData.user,
+              password: driverData.password
+          };
+          
+          await register(basicData);
+          setUserMode('driver'); // Set mode to driver
+          setView('main');
+      } catch (error) {
+          setAuthError(error);
+      } finally {
+          setIsProcessing(false);
+      }
+  }, [register]);
 
   const onLogout = useCallback(() => {
       logout();
@@ -227,21 +254,31 @@ const AppContent = () => {
       {/* iPhone 16 Pro Max Dimensions: ~440x956px */}
       <div className="w-[440px] h-[956px] bg-[#f8fafc] shadow-2xl relative overflow-hidden rounded-[3.5rem] ring-8 ring-slate-900/5 transform-gpu z-0">
         <div className="w-full h-full overflow-y-auto scrollbar-hide">
-            {!isAuthenticated ? (
-            <AuthView 
-              authView={authView} 
-              setAuthView={setAuthView} 
-              handleLogin={onLoginSubmit} 
-              handleRegister={onRegisterSubmit} 
-              loginData={loginData} 
-              setLoginData={setLoginData} 
-              registerData={registerData} 
-              setRegisterData={setRegisterData} 
-              isProcessing={isProcessing}
-              authError={authError}
-              setAuthError={setAuthError}
-            />
-        ) : (
+            {showSplash ? (
+                <SplashScreen onComplete={() => setShowSplash(false)} />
+            ) : !isAuthenticated ? (
+                authView === 'driver-register' ? (
+                    <DriverRegisterView 
+                        onBack={() => setAuthView('login')}
+                        onRegister={onDriverRegisterSubmit}
+                        isProcessing={isProcessing}
+                    />
+                ) : (
+                    <AuthView 
+                        authView={authView} 
+                        setAuthView={setAuthView} 
+                        handleLogin={onLoginSubmit} 
+                        handleRegister={onRegisterSubmit} 
+                        loginData={loginData} 
+                        setLoginData={setLoginData} 
+                        registerData={registerData} 
+                        setRegisterData={setRegisterData} 
+                        isProcessing={isProcessing}
+                        authError={authError}
+                        setAuthError={setAuthError}
+                    />
+                )
+            ) : (
             <>  
                 {userMode === 'client' ? (
                     <>

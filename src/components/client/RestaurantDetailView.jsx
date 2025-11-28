@@ -55,28 +55,28 @@ const RestaurantDetailView = ({ restaurant, setView }) => {
                       <img src={restaurant.image} alt="logo" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1">
-                      <h1 className="text-xl  text-slate-900 leading-tight mb-1">{restaurant.name}</h1>
+                      <h1 className="text-2xl  text-slate-900 leading-tight mb-1">{restaurant.name}</h1>
                       <div className="flex items-center gap-1 mb-1">
                           <Star size={14} className="fill-slate-900 text-slate-900" />
-                          <span className=" text-sm text-slate-900">{restaurant.rating}</span>
-                          <span className="text-slate-400 text-xs ml-1">Leer opiniones</span>
+                          <span className=" text-base text-slate-900">{restaurant.rating}</span>
+                          <span className="text-slate-400 text-sm ml-1">Leer opiniones</span>
                       </div>
                   </div>
               </div>
 
               <div className="flex items-center justify-between bg-slate-50 rounded-xl p-1 mb-4">
-                  <button className="flex-1 bg-slate-900 text-white py-2 rounded-lg text-sm  shadow-md">Delivery</button>
-                  <button className="flex-1 text-slate-500 py-2 rounded-lg text-sm font-medium hover:bg-slate-200 transition">Retiro en el local</button>
+                  <button className="flex-1 bg-slate-900 text-white py-2 rounded-lg text-base  shadow-md">Delivery</button>
+                  <button className="flex-1 text-slate-500 py-2 rounded-lg text-base font-medium hover:bg-slate-200 transition">Retiro en el local</button>
               </div>
               
-              <div className="flex items-center justify-between text-sm text-slate-600">
+              <div className="flex items-center justify-between text-base text-slate-600">
                   <div className="flex items-center gap-2">
                       <Clock size={16} className="text-slate-400" />
                       <span>Recibes en <span className=" text-slate-900">{restaurant.time}</span></span>
                   </div>
-                  <button className="text-[#4c8479]  text-xs">Programar</button>
+                  <button className="text-[#4c8479]  text-sm">Programar</button>
               </div>
-              <div className="flex items-center gap-2 mt-2 text-sm text-slate-600">
+              <div className="flex items-center gap-2 mt-2 text-base text-slate-600">
                   <Bike size={16} className="text-slate-400" />
                   <span>Envío <span className=" text-slate-900">{restaurant.deliveryFee === 0 ? 'Gratis' : `S/ ${restaurant.deliveryFee.toFixed(2)}`}</span></span>
               </div>
@@ -87,8 +87,8 @@ const RestaurantDetailView = ({ restaurant, setView }) => {
       <div className="px-4 mb-6">
           <div className="bg-[#4c00b0] rounded-2xl p-4 flex justify-between items-center text-white shadow-lg shadow-purple-900/20">
               <div className="flex items-center gap-3">
-                  <span className="bg-white text-[#4c00b0] text-[10px]  px-1.5 py-0.5 rounded">plus</span>
-                  <span className="font-medium text-sm">Ahorra S/ 3.9 Prueba gratis</span>
+                  <span className="bg-white text-[#4c00b0] text-xs  px-1.5 py-0.5 rounded">plus</span>
+                  <span className="font-medium text-base">Ahorra S/ 3.9 Prueba gratis</span>
               </div>
               <ChevronRight size={16} className="opacity-70" />
           </div>
@@ -101,7 +101,7 @@ const RestaurantDetailView = ({ restaurant, setView }) => {
                   <button 
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                    className={`px-4 py-2 rounded-full text-base font-medium whitespace-nowrap transition-all ${
                         activeCategory === cat 
                         ? 'bg-slate-900 text-white shadow-md' 
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -115,7 +115,7 @@ const RestaurantDetailView = ({ restaurant, setView }) => {
 
       {/* Más Vendidos Section */}
       <div className="mb-8">
-          <h2 className="text-lg  text-slate-900 px-4 mb-4">Más vendidos</h2>
+          <h2 className="text-xl  text-slate-900 px-4 mb-4">Más vendidos</h2>
           <div className="overflow-x-auto scrollbar-hide pl-4 pb-4">
               <div className="flex gap-4 pr-4">
                   {restaurant.menu.slice(0, 3).map(item => (
@@ -131,8 +131,8 @@ const RestaurantDetailView = ({ restaurant, setView }) => {
                               </button>
                           </div>
                           <div className="p-3">
-                              <h3 className=" text-slate-800 text-sm mb-1 truncate">{item.name}</h3>
-                              <p className=" text-slate-900">S/ {item.price}</p>
+                              <h3 className=" text-slate-800 text-base mb-1 truncate">{item.name}</h3>
+                              <p className=" text-slate-900 text-lg">S/ {item.price}</p>
                           </div>
                       </div>
                   ))}
@@ -142,7 +142,7 @@ const RestaurantDetailView = ({ restaurant, setView }) => {
 
       {/* Full Menu Section */}
       <div className="px-4">
-          <h2 className="text-lg  text-slate-900 mb-4">Los mejores descuentos</h2>
+          <h2 className="text-xl  text-slate-900 mb-4">Los mejores descuentos</h2>
           <div className="space-y-4">
               {restaurant.menu.map(item => (
                   <div 
@@ -153,20 +153,20 @@ const RestaurantDetailView = ({ restaurant, setView }) => {
                       <div className="w-28 h-28 rounded-xl overflow-hidden shrink-0 bg-slate-100 relative">
                           <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                           {Math.random() > 0.5 && (
-                              <div className="absolute top-2 left-2 bg-[#e8b931] text-slate-900 text-[10px]  px-2 py-1 rounded-md shadow-sm">
+                              <div className="absolute top-2 left-2 bg-[#e8b931] text-slate-900 text-xs  px-2 py-1 rounded-md shadow-sm">
                                   32% DSCTO
                               </div>
                           )}
                       </div>
                       <div className="flex-1 flex flex-col justify-between py-1">
                           <div>
-                              <h3 className=" text-slate-800 text-base leading-tight mb-1">{item.name}</h3>
-                              <p className="text-xs text-slate-500 line-clamp-2">{item.desc}</p>
+                              <h3 className=" text-slate-800 text-lg leading-tight mb-1">{item.name}</h3>
+                              <p className="text-sm text-slate-500 line-clamp-2">{item.desc}</p>
                           </div>
                           <div className="flex justify-between items-end mt-2">
                               <div className="flex flex-col">
-                                  <span className=" text-slate-900 text-lg">S/ {item.price.toFixed(2)}</span>
-                                  <span className="text-xs text-slate-400 line-through">S/ {(item.price * 1.3).toFixed(2)}</span>
+                                  <span className=" text-slate-900 text-xl">S/ {item.price.toFixed(2)}</span>
+                                  <span className="text-sm text-slate-400 line-through">S/ {(item.price * 1.3).toFixed(2)}</span>
                               </div>
                               <button className="bg-white border border-slate-200 p-1.5 rounded-full shadow-sm">
                                   <Plus size={18} className="text-slate-600" />

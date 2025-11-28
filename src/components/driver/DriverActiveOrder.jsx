@@ -1,22 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Navigation, Bike, ArrowRight, CheckCircle, Phone, MapPin, Store, MessageSquare, ShieldAlert, Star } from 'lucide-react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import SwipeButton from '../common/SwipeButton';
 import DriverChatModal from './DriverChatModal';
+import { MAPBOX_TOKEN, MAPBOX_STYLE } from '../../config/mapbox';
 
-// Fix for default marker icons in React Leaflet/Webpack
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+// Set Token
+mapboxgl.accessToken = MAPBOX_TOKEN;
 
 const DriverActiveOrder = ({ activeOrder, setDriverTab, setActiveOrder, deliveryStep, setDeliveryStep }) => {
    const mapContainerRef = useRef(null);
    const mapInstanceRef = useRef(null);
-   const routeLayerRef = useRef(null);
    const riderMarkerRef = useRef(null);
    const routesRef = useRef({ leg1: [], leg2: [] });
    const [isChatOpen, setIsChatOpen] = useState(false);
@@ -28,126 +23,187 @@ const DriverActiveOrder = ({ activeOrder, setDriverTab, setActiveOrder, delivery
    const CLIENT_POS = activeOrder?.clientLocation || { lat: -12.062000, lng: -77.035000 };
    const INITIAL_RIDER_POS = activeOrder?.riderLocation || STORE_POS;
    
-   useEffect(() => {
-       if (!mapContainerRef.current || !activeOrder) return;
+    useEffect(() => {
+        if (!mapContainerRef.current || !activeOrder) return;
 
-       // Initialize Map
-       if (!mapInstanceRef.current) {
-           const map = L.map(mapContainerRef.current, {
-               center: [INITIAL_RIDER_POS.lat, INITIAL_RIDER_POS.lng],
-               zoom: 16,
-               zoomControl: false,
-               attributionControl: false
-           });
+        // Reset routes and state to prevent stale data
+        routesRef.current = { leg1: [], leg2: [] };
+        setDeliveryStatus('idle');
+        setIsMoving(false);
 
-           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-               attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-           }).addTo(map);
-           mapInstanceRef.current = map;
+        // Force cleanup of previous map instance if it exists to ensure fresh start
+        if (mapInstanceRef.current) {
+            mapInstanceRef.current.remove();
+            mapInstanceRef.current = null;
+        }
 
-           // Add Markers
-           // Store Marker
-           let iconHtml = '';
-           let bgColor = 'bg-orange-500';
-           const storeType = activeOrder.storeType || 'fast-food';
+        // Initialize Map
+        const map = new mapboxgl.Map({
+            container: mapContainerRef.current,
+            style: MAPBOX_STYLE,
+            center: [INITIAL_RIDER_POS.lng, INITIAL_RIDER_POS.lat],
+            zoom: 16,
+            attributionControl: false
+        });
 
-           if (storeType === 'fast-food') {
-               iconHtml = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16.5 4c-1.5 0-2.8.8-3.5 2-.7-1.2-2-2-3.5-2-2.2 0-4 1.8-4 4h15c0-2.2-1.8-4-4-4Z"/><path d="M5 8v12h14V8"/></svg>`;
-               bgColor = 'bg-orange-500';
-           } else if (storeType === 'restaurant') {
-               iconHtml = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>`;
-               bgColor = 'bg-red-500';
-           } else if (storeType === 'supermarket') {
-               iconHtml = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 11-1 9"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/><path d="M4.5 15.5h15"/><path d="m5 11 4-7"/><path d="m9 11 1 9"/></svg>`;
-               bgColor = 'bg-blue-500';
-           } else if (storeType === 'pharmacy') {
-               iconHtml = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M12 2v4"/><path d="M16 2v4"/><rect width="20" height="14" x="2" y="6" rx="2"/><path d="M2 14h20"/><path d="M12 14v6"/></svg>`;
-               bgColor = 'bg-green-500';
-           } else if (storeType === 'park') {
-               iconHtml = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-9"/><path d="M15.14 8.86a5 5 0 0 1 1.94 1.69"/><path d="M8.86 8.86a5 5 0 0 0-1.94 1.69"/><path d="M12 13a5 5 0 1 0-4-8 5 5 0 0 0 4 8Z"/><path d="M20.5 10a5.5 5.5 0 0 0-5.5-5.5 5.5 5.5 0 0 0-2.9 1.05"/><path d="M6.09 14.5a5.5 5.5 0 1 1-2.91-1.05"/></svg>`;
-               bgColor = 'bg-emerald-600';
-           } else if (storeType === 'hotel') {
-               iconHtml = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 22v-6.57"/><path d="M12 11h.01"/><path d="M12 7h.01"/><path d="M14 15.43V22"/><path d="M15 16a5 5 0 0 0-6 0"/><path d="M16 11h.01"/><path d="M16 7h.01"/><path d="M8 11h.01"/><path d="M8 7h.01"/><rect x="4" y="2" width="16" height="20" rx="2"/></svg>`;
-               bgColor = 'bg-indigo-600';
-           }
+        mapInstanceRef.current = map;
 
-           const storeIcon = L.divIcon({
-               className: 'bg-transparent',
-               html: `<div class="w-10 h-10 ${bgColor} rounded-full flex items-center justify-center border-2 border-white shadow-lg">${iconHtml}</div>`,
-               iconSize: [40, 40],
-               iconAnchor: [20, 20]
-           });
-           L.marker([STORE_POS.lat, STORE_POS.lng], { icon: storeIcon }).addTo(map);
+        map.on('load', () => {
+            let iconHtml = '';
+            let bgColor = 'bg-orange-500';
+            const storeType = activeOrder.storeType || 'fast-food';
 
-           // Client Marker
-           const clientIcon = L.divIcon({
-               html: `<div class="w-10 h-10 bg-[#F08080] rounded-full flex items-center justify-center border-2 border-white shadow-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>`,
-               iconSize: [40, 40],
-               iconAnchor: [20, 20]
-           });
-           L.marker([CLIENT_POS.lat, CLIENT_POS.lng], { icon: clientIcon }).addTo(map);
+            if (storeType === 'fast-food') {
+                iconHtml = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16.5 4c-1.5 0-2.8.8-3.5 2-.7-1.2-2-2-3.5-2-2.2 0-4 1.8-4 4h15c0-2.2-1.8-4-4-4Z"/><path d="M5 8v12h14V8"/></svg>`;
+                bgColor = 'bg-[#FF9E67]'; // Google Food Orange
+            } else if (storeType === 'restaurant') {
+                iconHtml = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>`;
+                bgColor = 'bg-[#FF9E67]'; // Google Food Orange
+            } else if (storeType === 'supermarket') {
+                iconHtml = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 11-1 9"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/><path d="M4.5 15.5h15"/><path d="m5 11 4-7"/><path d="m9 11 1 9"/></svg>`;
+                bgColor = 'bg-[#4285F4]'; // Google Blue
+            } else if (storeType === 'pharmacy') {
+                iconHtml = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M12 2v4"/><path d="M16 2v4"/><rect width="20" height="14" x="2" y="6" rx="2"/><path d="M2 14h20"/><path d="M12 14v6"/></svg>`;
+                bgColor = 'bg-[#EA4335]'; // Google Health Red
+            } else if (storeType === 'park') {
+                iconHtml = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-9"/><path d="M15.14 8.86a5 5 0 0 1 1.94 1.69"/><path d="M8.86 8.86a5 5 0 0 0-1.94 1.69"/><path d="M12 13a5 5 0 1 0-4-8 5 5 0 0 0 4 8Z"/><path d="M20.5 10a5.5 5.5 0 0 0-5.5-5.5 5.5 5.5 0 0 0-2.9 1.05"/><path d="M6.09 14.5a5.5 5.5 0 1 1-2.91-1.05"/></svg>`;
+                bgColor = 'bg-[#34A853]'; // Google Green
+            } else if (storeType === 'hotel') {
+                iconHtml = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 22v-6.57"/><path d="M12 11h.01"/><path d="M12 7h.01"/><path d="M14 15.43V22"/><path d="M15 16a5 5 0 0 0-6 0"/><path d="M16 11h.01"/><path d="M16 7h.01"/><path d="M8 11h.01"/><path d="M8 7h.01"/><rect x="4" y="2" width="16" height="20" rx="2"/></svg>`;
+                bgColor = 'bg-[#A142F4]'; // Google Purple
+            }
 
-           // Rider Marker
-           const riderIcon = L.divIcon({
-                className: 'bg-transparent',
-                html: `<div class="w-12 h-12 bg-[#4c8479] rounded-full flex items-center justify-center border-4 border-white shadow-xl pulse-ring"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg></div>`,
-                iconSize: [48, 48],
-                iconAnchor: [24, 24]
-            });
-           riderMarkerRef.current = L.marker([INITIAL_RIDER_POS.lat, INITIAL_RIDER_POS.lng], { icon: riderIcon, zIndexOffset: 1000 }).addTo(map);
+            const storeEl = document.createElement('div');
+            storeEl.className = 'store-marker';
+            storeEl.innerHTML = `
+            <div class="flex flex-col items-center transform hover:scale-110 transition-transform z-20">
+                <div class="w-9 h-9 ${bgColor} rounded-full flex items-center justify-center border-[2px] border-white shadow-lg z-10">
+                    ${iconHtml}
+                </div>
+                <div class="mt-1 bg-white px-2.5 py-1 rounded-md shadow-[0_2px_4px_rgba(0,0,0,0.15)] border border-black/5 text-[11px] font-bold text-slate-800 whitespace-nowrap z-0 max-w-[140px] truncate">
+                    ${activeOrder.storeName || 'Tienda'}
+                </div>
+            </div>
+            `;
+            new mapboxgl.Marker(storeEl)
+                .setLngLat([STORE_POS.lng, STORE_POS.lat])
+                .addTo(map);
 
-           // Fetch Route (OSRM)
-           const waypoints = `${INITIAL_RIDER_POS.lng},${INITIAL_RIDER_POS.lat};${STORE_POS.lng},${STORE_POS.lat};${CLIENT_POS.lng},${CLIENT_POS.lat}`;
-           
-           fetch(`https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson&steps=true`)
-               .then(res => res.json())
-               .then(data => {
-                   if (data.routes && data.routes[0]) {
-                       const route = data.routes[0];
-                       const fullCoordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-                       
-                       // Draw Route
-                       routeLayerRef.current = L.polyline(fullCoordinates, {
-                           color: '#4c8479',
-                           weight: 6,
-                           opacity: 0.8,
-                           lineCap: 'round'
-                       }).addTo(map);
+            // Client Marker
+            const clientEl = document.createElement('div');
+            clientEl.className = 'client-marker';
+            clientEl.innerHTML = `
+            <div class="flex flex-col items-center transform hover:scale-110 transition-transform z-20">
+                <div class="w-9 h-9 bg-[#EA4335] rounded-full flex items-center justify-center border-[2px] border-white shadow-lg z-10">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                </div>
+                <div class="mt-1 bg-white px-2.5 py-1 rounded-md shadow-[0_2px_4px_rgba(0,0,0,0.15)] border border-black/5 text-[11px] font-bold text-slate-800 whitespace-nowrap z-0 max-w-[140px] truncate">
+                    ${activeOrder.client}
+                </div>
+            </div>
+            `;
+            new mapboxgl.Marker(clientEl)
+                .setLngLat([CLIENT_POS.lng, CLIENT_POS.lat])
+                .addTo(map);
 
-                       // Fit bounds
-                       map.fitBounds(L.latLngBounds(fullCoordinates), { padding: [50, 50] });
+            // Rider Marker
+            const riderEl = document.createElement('div');
+            riderEl.className = 'rider-marker';
+            riderEl.innerHTML = `<div class="w-12 h-12 bg-[#4c8479] rounded-full flex items-center justify-center border-4 border-white shadow-xl pulse-ring"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg></div>`;
+            
+            // Ensure rider starts at INITIAL_RIDER_POS (which should be the store for the first leg if we assume pickup)
+            // Or better, if it's a new order, the rider is likely at their current location. 
+            // For simulation, let's assume rider starts near the store or at a fixed point.
+            riderMarkerRef.current = new mapboxgl.Marker(riderEl)
+                .setLngLat([INITIAL_RIDER_POS.lng, INITIAL_RIDER_POS.lat])
+                .addTo(map);
 
-                       // Parse Legs for Animation
-                       if (route.legs && route.legs.length >= 2) {
-                           // Leg 1: Rider -> Store
-                           const leg1Steps = route.legs[0].steps;
-                           const leg1Coords = [];
-                           leg1Steps.forEach(step => {
-                               step.geometry.coordinates.forEach(coord => leg1Coords.push([coord[1], coord[0]]));
-                           });
-                           // Ensure start/end points match exactly
-                           leg1Coords.unshift([INITIAL_RIDER_POS.lat, INITIAL_RIDER_POS.lng]);
-                           leg1Coords.push([STORE_POS.lat, STORE_POS.lng]);
+            // Fetch Route (Mapbox Directions API)
+            const fetchRoute = async () => {
+                try {
+                    // Leg 1: Rider -> Store
+                    const leg1Url = `https://api.mapbox.com/directions/v5/mapbox/driving/${INITIAL_RIDER_POS.lng},${INITIAL_RIDER_POS.lat};${STORE_POS.lng},${STORE_POS.lat}?steps=true&geometries=geojson&access_token=${MAPBOX_TOKEN}`;
+                    const leg1Res = await fetch(leg1Url);
+                    const leg1Data = await leg1Res.json();
 
-                           // Leg 2: Store -> Client
-                           const leg2Steps = route.legs[1].steps;
-                           const leg2Coords = [];
-                           leg2Steps.forEach(step => {
-                               step.geometry.coordinates.forEach(coord => leg2Coords.push([coord[1], coord[0]]));
-                           });
-                           leg2Coords.unshift([STORE_POS.lat, STORE_POS.lng]);
-                           leg2Coords.push([CLIENT_POS.lat, CLIENT_POS.lng]);
+                    // Leg 2: Store -> Client
+                    const leg2Url = `https://api.mapbox.com/directions/v5/mapbox/driving/${STORE_POS.lng},${STORE_POS.lat};${CLIENT_POS.lng},${CLIENT_POS.lat}?steps=true&geometries=geojson&access_token=${MAPBOX_TOKEN}`;
+                    const leg2Res = await fetch(leg2Url);
+                    const leg2Data = await leg2Res.json();
 
-                           // Store in refs
-                           routesRef.current.leg1 = leg1Coords;
-                           routesRef.current.leg2 = leg2Coords;
-                       }
-                   }
-               })
-               .catch(err => console.error("Error fetching route:", err));
-       }
+                    if (leg1Data.routes[0] && leg2Data.routes[0]) {
+                        // Manually append the exact destination coordinates to ensure the route connects to the marker
+                        const leg1Coords = leg1Data.routes[0].geometry.coordinates;
+                        leg1Coords.unshift([INITIAL_RIDER_POS.lng, INITIAL_RIDER_POS.lat]); // Start exactly at rider
+                        leg1Coords.push([STORE_POS.lng, STORE_POS.lat]);
 
-   }, [activeOrder]);
+                        const leg2Coords = leg2Data.routes[0].geometry.coordinates;
+                        leg2Coords.unshift([STORE_POS.lng, STORE_POS.lat]); // Start exactly at store
+                        leg2Coords.push([CLIENT_POS.lng, CLIENT_POS.lat]);
+
+                        routesRef.current = {
+                            leg1: leg1Coords,
+                            leg2: leg2Coords
+                        };
+
+                        // Draw Route (Full Path)
+                        const fullCoordinates = [...routesRef.current.leg1, ...routesRef.current.leg2];
+                        
+                        const geojson = {
+                            type: 'Feature',
+                            properties: {},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: fullCoordinates
+                            }
+                        };
+
+                        if (map.getSource('route')) {
+                            map.getSource('route').setData(geojson);
+                        } else {
+                            map.addLayer({
+                                id: 'route',
+                                type: 'line',
+                                source: {
+                                    type: 'geojson',
+                                    data: geojson
+                                },
+                                layout: {
+                                    'line-join': 'round',
+                                    'line-cap': 'round'
+                                },
+                                paint: {
+                                    'line-color': '#3b82f6',
+                                    'line-width': 5,
+                                    'line-opacity': 0.8
+                                }
+                            });
+                        }
+                        
+                        // Fit Bounds
+                        const bounds = fullCoordinates.reduce((bounds, coord) => {
+                            return bounds.extend(coord);
+                        }, new mapboxgl.LngLatBounds(fullCoordinates[0], fullCoordinates[0]));
+
+                        map.fitBounds(bounds, { padding: 50 });
+                    }
+
+                } catch (error) {
+                    console.error("Error fetching routes:", error);
+                }
+            };
+
+            fetchRoute();
+        });
+
+        return () => {
+             if (mapInstanceRef.current) {
+                 mapInstanceRef.current.remove();
+                 mapInstanceRef.current = null;
+             }
+        };
+
+    }, [activeOrder]);
 
    // Animation Logic (Path Following)
    const animateMovement = (pathCoordinates, onComplete) => {
@@ -181,19 +237,19 @@ const DriverActiveOrder = ({ activeOrder, setDriverTab, setActiveOrder, delivery
                        throw new Error("Invalid path segment");
                    }
 
-                   const currentLat = start[0] + (end[0] - start[0]) * segmentProgress;
-                   const currentLng = start[1] + (end[1] - start[1]) * segmentProgress;
+                   const currentLng = start[0] + (end[0] - start[0]) * segmentProgress;
+                   const currentLat = start[1] + (end[1] - start[1]) * segmentProgress;
 
                    if (marker && !isNaN(currentLat) && !isNaN(currentLng)) {
-                       marker.setLatLng([currentLat, currentLng]);
+                       marker.setLngLat([currentLng, currentLat]);
                    }
                    if (map && !isNaN(currentLat) && !isNaN(currentLng)) {
-                       map.panTo([currentLat, currentLng], { animate: false });
+                       map.panTo([currentLng, currentLat], { animate: false });
                    }
                } else {
                    // Ensure we land exactly on the last point
                    const lastPoint = pathCoordinates[pathCoordinates.length - 1];
-                   if (marker) marker.setLatLng(lastPoint);
+                   if (marker) marker.setLngLat(lastPoint);
                    if (map) map.panTo(lastPoint);
                }
 
@@ -217,11 +273,11 @@ const DriverActiveOrder = ({ activeOrder, setDriverTab, setActiveOrder, delivery
     const handleSwipe = () => {
         if (deliveryStep === 0) {
             // Move from Rider Start -> Store (Leg 1)
-            const path = routesRef.current.leg1.length > 0 ? routesRef.current.leg1 : [[INITIAL_RIDER_POS.lat, INITIAL_RIDER_POS.lng], [STORE_POS.lat, STORE_POS.lng]];
+            const path = routesRef.current.leg1.length > 0 ? routesRef.current.leg1 : [[INITIAL_RIDER_POS.lng, INITIAL_RIDER_POS.lat], [STORE_POS.lng, STORE_POS.lat]];
             animateMovement(path, () => setDeliveryStep(1));
         } else if (deliveryStep === 1) {
             // Move from Store -> Client (Leg 2)
-            const path = routesRef.current.leg2.length > 0 ? routesRef.current.leg2 : [[STORE_POS.lat, STORE_POS.lng], [CLIENT_POS.lat, CLIENT_POS.lng]];
+            const path = routesRef.current.leg2.length > 0 ? routesRef.current.leg2 : [[STORE_POS.lng, STORE_POS.lat], [CLIENT_POS.lng, CLIENT_POS.lat]];
             animateMovement(path, () => {
                 // Trigger Delivery Animation
                 setDeliveryStatus('confirmed');
@@ -354,6 +410,7 @@ const DriverActiveOrder = ({ activeOrder, setDriverTab, setActiveOrder, delivery
                            <div>
                                <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mb-1">Pedido</p>
                                <p className="text-sm text-slate-700">{activeOrder.items}</p>
+                               <p className="text-xs font-medium text-slate-500 mt-1">Pago: {activeOrder.paymentMethod || 'Efectivo'}</p>
                            </div>
 
                            {activeOrder.indications && (
@@ -366,8 +423,7 @@ const DriverActiveOrder = ({ activeOrder, setDriverTab, setActiveOrder, delivery
                            )}
                        </div>
 
-                       {/* Swipe Action */}
-                       <SwipeButton 
+                       <SwipeButton  
                             key={deliveryStep}
                             onConfirm={handleSwipe} 
                             label={stepInfo.action}
@@ -405,6 +461,10 @@ const DriverActiveOrder = ({ activeOrder, setDriverTab, setActiveOrder, delivery
                         {/* Financials */}
                         <div className="bg-slate-50 rounded-2xl p-4 mb-6 border border-slate-100">
                             <div className="flex justify-between items-center mb-2">
+                                <span className="text-slate-500 text-sm">Método de Pago</span>
+                                <span className="font-medium text-slate-800">{activeOrder.paymentMethod || 'Efectivo'}</span>
+                            </div>
+                            <div className="flex justify-between items-center mb-2">
                                 <span className="text-slate-500 text-sm">Tarifa Base</span>
                                 <span className="font-medium text-slate-800">S/ {(activeOrder.price * 0.8).toFixed(2)}</span>
                             </div>
@@ -418,6 +478,17 @@ const DriverActiveOrder = ({ activeOrder, setDriverTab, setActiveOrder, delivery
                             </div>
                         </div>
 
+                        {/* Client Rating Simulation */}
+                         <div className="mb-6 text-center">
+                            <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">Calificación del Cliente</p>
+                            <div className="flex justify-center gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star key={star} size={24} className="text-yellow-400 fill-yellow-400" />
+                                ))}
+                            </div>
+                            <p className="text-sm font-medium text-slate-600 mt-1">¡Excelente servicio!</p>
+                        </div>
+
                         <button 
                             onClick={() => { 
                                 // Save Order to History
@@ -427,7 +498,7 @@ const DriverActiveOrder = ({ activeOrder, setDriverTab, setActiveOrder, delivery
                                     ...activeOrder,
                                     status: 'completed',
                                     completedAt: new Date().toISOString(),
-                                    rating: 5, // Default rating since step was skipped
+                                    rating: 5, // Fixed to 5 for now as per UI
                                     driverId: currentUser.id
                                 };
                                 history.unshift(newOrderRecord);

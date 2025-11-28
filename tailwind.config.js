@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Itim', 'cursive'],
+        sans: ['Quicksand', 'sans-serif'],
       },
     },
   },

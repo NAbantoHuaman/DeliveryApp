@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import L from 'leaflet';
-import { ArrowLeft, MapPin, Loader2 } from 'lucide-react'; // Added Loader2
-import 'leaflet/dist/leaflet.css';
+import mapboxgl from 'mapbox-gl';
+import { ArrowLeft, MapPin, Loader2 } from 'lucide-react';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { MAPBOX_TOKEN, MAPBOX_STYLE } from '../../config/mapbox';
+
+mapboxgl.accessToken = MAPBOX_TOKEN;
 
 export default function LocationPickerView({ onBack, onConfirm }) {
   const mapContainerRef = useRef(null);
@@ -18,12 +21,12 @@ export default function LocationPickerView({ onBack, onConfirm }) {
   const fetchAddress = async (lat, lng) => {
     setLoading(true);
     try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address&access_token=${mapboxgl.accessToken}`
+      );
       const data = await response.json();
-      if (data.display_name) {
-        // Simplify address for display (take first 3 parts)
-        const parts = data.display_name.split(',').slice(0, 3).join(',');
-        setAddress(parts);
+      if (data.features && data.features.length > 0) {
+        setAddress(data.features[0].place_name);
       } else {
         setAddress("Dirección desconocida");
       }
@@ -34,20 +37,18 @@ export default function LocationPickerView({ onBack, onConfirm }) {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     if (!mapContainerRef.current) return;
+    if (mapInstanceRef.current) return;
 
     // Initialize map
-    const map = L.map(mapContainerRef.current, {
-      center: [defaultCenter.lat, defaultCenter.lng],
+    const map = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: MAPBOX_STYLE,
+      center: [defaultCenter.lng, defaultCenter.lat],
       zoom: 15,
-      zoomControl: false
+      attributionControl: false
     });
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
 
     mapInstanceRef.current = map;
 

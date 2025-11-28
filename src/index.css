@@ -2,21 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-.itim-regular {
-  font-family: "Itim", cursive;
-  font-weight: 400;
-  font-style: normal;
-}
-
-body {
-  font-family: "Itim", cursive;
+body, button, input, textarea, select {
+  font-family: "Quicksand", sans-serif;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
 .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 
+   🛠️ CAPTURE MODE FOR FIGMA 🛠️
+   Uncomment the block below when using html.to.design.
+   It disables animations so everything is visible immediately.
+*/
+
+/*
+*, *::before, *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+*/
+
+@keyframes vibrate {
+  0% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-0.5px, 0.5px);
+  }
+  40% {
+    transform: translate(-0.5px, -0.5px);
+  }
+  60% {
+    transform: translate(0.5px, 0.5px);
+  }
+  80% {
+    transform: translate(0.5px, -0.5px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+.animate-vibrate {
+  animation: vibrate 0.1s infinite;
 }

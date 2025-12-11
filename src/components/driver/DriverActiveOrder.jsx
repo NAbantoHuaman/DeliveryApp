@@ -210,9 +210,11 @@ const DriverActiveOrder = ({ activeOrder, setDriverTab, setActiveOrder, delivery
    // Animation Logic (Path Following)
    const animateMovement = (pathCoordinates, onComplete) => {
        if (!pathCoordinates || pathCoordinates.length < 2) {
+           console.warn("Invalid pathCoordinates for animation:", pathCoordinates);
            onComplete();
            return;
        }
+
 
        setIsMoving(true);
        const duration = 4000; // 4 seconds total duration
@@ -234,22 +236,19 @@ const DriverActiveOrder = ({ activeOrder, setDriverTab, setActiveOrder, delivery
                if (currentSegmentIndex < totalSegments) {
                    const start = pathCoordinates[currentSegmentIndex];
                    const end = pathCoordinates[currentSegmentIndex + 1];
-                   
                    if (!start || !end) {
-                       console.warn("Invalid path segment encountered, skipping animation.");
-                       setIsMoving(false);
-                       onComplete();
-                       return;
-                   }
+                       // console.warn(`Skipping invalid segment at index ${currentSegmentIndex}`);
+                       // Do not abort, just skip this frame's visual update
+                   } else {
+                        const currentLng = start[0] + (end[0] - start[0]) * segmentProgress;
+                        const currentLat = start[1] + (end[1] - start[1]) * segmentProgress;
 
-                   const currentLng = start[0] + (end[0] - start[0]) * segmentProgress;
-                   const currentLat = start[1] + (end[1] - start[1]) * segmentProgress;
-
-                   if (marker && !isNaN(currentLat) && !isNaN(currentLng)) {
-                       marker.setLngLat([currentLng, currentLat]);
-                   }
-                   if (map && !isNaN(currentLat) && !isNaN(currentLng)) {
-                       map.panTo([currentLng, currentLat], { animate: false });
+                        if (marker && !isNaN(currentLat) && !isNaN(currentLng)) {
+                            marker.setLngLat([currentLng, currentLat]);
+                        }
+                        if (map && !isNaN(currentLat) && !isNaN(currentLng)) {
+                            map.panTo([currentLng, currentLat], { animate: false });
+                        }
                    }
                } else {
                    // Ensure we land exactly on the last point

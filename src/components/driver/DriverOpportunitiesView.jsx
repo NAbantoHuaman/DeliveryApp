@@ -127,29 +127,15 @@ const DriverOpportunitiesView = ({ onAcceptOrder, nearbyPlaces = [], riderLocati
         let isSynthetic = false;
 
         // STRICT UNIQUENESS: If all real places are taken, try to use a synthetic place
+        // STRICT UNIQUENESS: If all real places are taken, reuse one of the valid places
         if (availablePlaces.length > 0) {
              place = availablePlaces[Math.floor(Math.random() * availablePlaces.length)];
+        } else if (validPlaces.length > 0) {
+             // Fallback: Reuse a real place if we ran out of unique ones (Better than inventing a location)
+             place = validPlaces[Math.floor(Math.random() * validPlaces.length)];
         } else {
-            // Try to find a synthetic place that isn't already used
-            const availableSynthetic = SYNTHETIC_PLACES.filter(p => !existingNames.has(p.name));
-            
-            if (availableSynthetic.length > 0) {
-                const synthetic = availableSynthetic[Math.floor(Math.random() * availableSynthetic.length)];
-                // Create a fake place object with a random location near the rider
-                place = {
-                    name: synthetic.name,
-                    type: synthetic.type,
-                    // Random offset within ~1km
-                    lat: (riderLocation?.lat || -7.16378) + (Math.random() - 0.5) * 0.01,
-                    lng: (riderLocation?.lng || -78.50027) + (Math.random() - 0.5) * 0.01,
-                    rawCategory: synthetic.type,
-                    rawMaki: synthetic.type
-                };
-                isSynthetic = true;
-            } else {
-                // If absolutely everything is taken (rare), return null to avoid duplicates
-                return null;
-            }
+            // No places found at all (very rare if map loads)
+            return null;
         }
         
         // INTELLIGENT CLASSIFICATION

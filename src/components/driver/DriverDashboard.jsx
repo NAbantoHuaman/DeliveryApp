@@ -59,24 +59,14 @@ const DriverDashboard = ({ handleMotivateDriver, isAILoading, driverMotivation, 
       return 'restaurant'; // Default fallback
   };
 
+  // FIX: Unreliable IP Location replaced with Fixed Location (Jr. Sor Manuela Gil) for Presentation
+  const FIXED_LOCATION = { lat: -7.148319, lng: -78.509325 };
+
   // Handle Initial Location (Run on Mount)
   useEffect(() => {
-    if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition((position) => {
-            const { latitude, longitude } = position.coords;
-            setRiderLocation({ lat: latitude, lng: longitude });
-        }, (error) => {
-            if (error.code === 1) {
-                console.warn("Ubicación denegada por el usuario. Usando ubicación por defecto (Cajamarca).");
-            } else {
-                console.warn("No se pudo obtener la ubicación. Usando ubicación por defecto.", error.message);
-            }
-            // Fallback to Cajamarca
-            setRiderLocation({ lat: -7.16378, lng: -78.50027 }); 
-        });
-    } else {
-        setRiderLocation({ lat: -7.16378, lng: -78.50027 });
-    }
+     // Presentation Mode: Force specific location where we know there are restaurants
+     console.log("Using Fixed Presentation Location: Los Sauces");
+     setRiderLocation(FIXED_LOCATION);
   }, []);
 
   // Initialize Map & Real-time POI Extraction
@@ -98,9 +88,23 @@ const DriverDashboard = ({ handleMotivateDriver, isAILoading, driverMotivation, 
       const fetchCityWidePlaces = async (lat, lng) => {
           try {
               // Search for popular categories in a wider radius (approx 5km)
-              const categories = ['restaurant', 'cafe', 'bakery', 'shopping_mall', 'pharmacy', 'market'];
-              const promises = categories.map(cat => 
-                  fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${cat}.json?proximity=${lng},${lat}&limit=25&types=poi&access_token=${MAPBOX_TOKEN}`)
+              // Search in a WIDER "Star Pattern" to cover a 7km radius
+              // 0.063 degrees is roughly 7km
+              const searchSectors = [
+                  { cat: 'restaurant', latOffset: 0, lngOffset: 0 },             // Center (Close)
+                  { cat: 'restaurant', latOffset: 0.063, lngOffset: 0 },         // North (7km) - Restaurants
+                  { cat: 'restaurant', latOffset: -0.063, lngOffset: 0 },        // South (7km) - Restaurants
+                  { cat: 'restaurant', latOffset: 0, lngOffset: 0.063 },         // East (7km)  - Restaurants
+                  { cat: 'fast_food', latOffset: 0, lngOffset: -0.063 },         // West (7km)
+                  { cat: 'cafe', latOffset: 0.045, lngOffset: 0.045 },           // North-East (~5km)
+                  { cat: 'bakery', latOffset: -0.045, lngOffset: -0.045 },       // South-West (~5km)
+                  { cat: 'shopping_mall', latOffset: 0.045, lngOffset: -0.045 }, // North-West (~5km)
+                  { cat: 'pharmacy', latOffset: -0.045, lngOffset: 0.045 },      // South-East (~5km)
+                  { cat: 'market', latOffset: 0.07, lngOffset: 0 }               // Far North (8km)
+              ];
+
+              const promises = searchSectors.map(sector => 
+                  fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${sector.cat}.json?proximity=${lng + sector.lngOffset},${lat + sector.latOffset}&limit=25&types=poi&access_token=${MAPBOX_TOKEN}`)
                       .then(res => res.json())
               );
 

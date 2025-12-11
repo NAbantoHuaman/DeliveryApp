@@ -18,7 +18,7 @@ const CLIENT_NAMES = [
 
 const DriverDashboard = ({ handleMotivateDriver, isAILoading, driverMotivation, setIncomingOrder, acceptOrder, onOnlineStatusChange }) => {
   const [isOnline, setIsOnline] = useState(false);
-  const [riderLocation, setRiderLocation] = useState(null);
+  const [riderLocation, setRiderLocation] = useState({ lat: -7.16378, lng: -78.50027 });
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const riderMarkerRef = useRef(null);
